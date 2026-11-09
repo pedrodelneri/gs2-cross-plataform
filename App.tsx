@@ -1,20 +1,42 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// Telas
+import DashboardScreen from './src/screens/DashboardScreen';
+import AlertFormScreen from './src/screens/AlertFormScreen';
+
+// 1. Tipagem das rotas (excelente prática para projetos em TypeScript)
+export type RootStackParamList = {
+  Dashboard: undefined; // undefined significa que a rota não exige parâmetros
+  AlertForm: undefined;
+};
+
+// 2. Criação do Stack
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName="Dashboard"
+        screenOptions={{
+          headerStyle: { backgroundColor: '#2C3E50' },
+          headerTintColor: '#FFF',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      >
+        <Stack.Screen 
+          name="Dashboard" 
+          component={DashboardScreen} 
+          options={{ title: 'Painel de Inteligência' }} 
+        />
+        <Stack.Screen 
+          name="AlertForm" 
+          component={AlertFormScreen} 
+          options={{ title: 'Registrar Alerta' }} 
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
