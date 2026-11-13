@@ -12,28 +12,44 @@ type AlertFormData = {
 };
 
 export default function AlertFormScreen() {
-  const { control, handleSubmit, formState: { errors }, reset } = useForm<AlertFormData>();
+  // CORREÇÃO 1: Adicionado o defaultValues para sincronizar o estado
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<AlertFormData>({
+    defaultValues: {
+      title: '',
+      category: '',
+      confidence: '',
+      justification: ''
+    }
+  });
+  
   const navigation = useNavigation();
 
   const onSubmit = async (data: AlertFormData) => {
     try {
-      // 1. Prepara o novo alerta com um ID único baseado na data
       const newAlert = { id: Date.now().toString(), ...data };
       
-      // 2. Busca alertas que já estão salvos no dispositivo
       const storedAlerts = await AsyncStorage.getItem('@territory_alerts');
       const alertsArray = storedAlerts ? JSON.parse(storedAlerts) : [];
       
-      // 3. Adiciona o novo alerta e salva novamente
       alertsArray.push(newAlert);
       await AsyncStorage.setItem('@territory_alerts', JSON.stringify(alertsArray));
       
-      Alert.alert('Sucesso', 'Alerta preditivo registrado na base local.', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      // Na web o Alert nativo pode não aparecer, então usamos um alert do navegador se necessário
+      if (Platform.OS === 'web') {
+        window.alert('Alerta preditivo registrado na base local com sucesso!');
+        navigation.goBack();
+      } else {
+        Alert.alert('Sucesso', 'Alerta preditivo registrado na base local.', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      }
       reset();
     } catch (error) {
-      Alert.alert('Erro', 'Falha ao salvar o alerta. Tente novamente.');
+      if (Platform.OS === 'web') {
+        window.alert('Falha ao salvar o alerta. Tente novamente.');
+      } else {
+        Alert.alert('Erro', 'Falha ao salvar o alerta. Tente novamente.');
+      }
     }
   };
 
@@ -54,7 +70,7 @@ export default function AlertFormScreen() {
             style={[styles.input, errors.title && styles.inputError]}
             placeholder="Ex: Risco de enchente no bairro X"
             onBlur={onBlur}
-            onChangeText={onChange}
+            onChangeText={(text) => onChange(text)} // CORREÇÃO 2: Captura explícita
             value={value}
           />
         )}
@@ -72,7 +88,7 @@ export default function AlertFormScreen() {
             style={[styles.input, errors.category && styles.inputError]}
             placeholder="Ex: Clima"
             onBlur={onBlur}
-            onChangeText={onChange}
+            onChangeText={(text) => onChange(text)}
             value={value}
           />
         )}
@@ -94,7 +110,7 @@ export default function AlertFormScreen() {
             placeholder="Ex: 85"
             keyboardType="numeric"
             onBlur={onBlur}
-            onChangeText={onChange}
+            onChangeText={(text) => onChange(text)}
             value={value}
           />
         )}
@@ -111,6 +127,9 @@ export default function AlertFormScreen() {
     </ScrollView>
   );
 }
+
+// Para usar o Platform.OS precisamos importar ele lá em cima
+import { Platform } from 'react-native';
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#F5F7FA' },
